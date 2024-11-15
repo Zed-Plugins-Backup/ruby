@@ -76,11 +76,24 @@ impl RubyLsp {
         };
 
         let len = completion.label.len();
-        let name_span = CodeLabelSpan::literal(completion.label, Some(highlight_name.to_string()));
+        let mut spans = Vec::with_capacity(3);
+
+        spans.push(CodeLabelSpan::literal(
+            completion.label,
+            Some(highlight_name.into()),
+        ));
+
+        if let Some(detail) = completion
+            .label_details
+            .and_then(|label_details| label_details.detail)
+        {
+            spans.push(CodeLabelSpan::literal(" ", None));
+            spans.push(CodeLabelSpan::literal(detail, None));
+        }
 
         Some(CodeLabel {
             code: Default::default(),
-            spans: vec![name_span],
+            spans,
             filter_range: (0..len).into(),
         })
     }
