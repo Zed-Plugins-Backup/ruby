@@ -15,11 +15,11 @@ impl Bundler {
     pub fn installed_gem_version(&self, name: &str) -> Result<String> {
         let args = vec!["info", "--version", name];
 
-        self.execute_gem_command(args)
+        self.execute_bundle_command(args)
             .map_err(|e| format!("Failed to get version for gem '{}': {}", name, e))
     }
 
-    fn execute_gem_command(&self, args: Vec<&str>) -> Result<String> {
+    fn execute_bundle_command(&self, args: Vec<&str>) -> Result<String> {
         let bundle_gemfile_path = Path::new(&self.working_dir).join("Gemfile");
         let bundle_gemfile = bundle_gemfile_path
             .to_str()

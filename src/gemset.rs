@@ -47,24 +47,21 @@ impl Gemset {
 
     pub fn install_gem(&self, name: String) -> Result<()> {
         let args = vec![
-            "install",
-            "--no-user-install", // Do not install gems in user's home directory
+            "--no-user-install",      // Do not install gems in user's home directory
             "--no-format-executable", // Do not make installed executable names match Ruby
-            "--no-document",     // Do not generate documentation
-            // "--env-shebang",     // Use /usr/bin/env as a shebang
+            "--no-document",          // Do not generate documentation
+            // "--env-shebang",       // Use /usr/bin/env as a shebang
             &name,
         ];
 
-        self.execute_gem_command(args)
+        self.execute_gem_command("install".into(), args)
             .map_err(|e| format!("Failed to install gem '{}': {}", name, e))?;
 
         Ok(())
     }
 
     pub fn update_gem(&self, name: String) -> Result<()> {
-        let args = vec!["update", &name];
-
-        self.execute_gem_command(args)
+        self.execute_gem_command("update".into(), vec![&name])
             .map_err(|e| format!("Failed to update gem '{}': {}", name, e))?;
 
         Ok(())
@@ -81,9 +78,9 @@ impl Gemset {
         let re = Regex::new(r"^(\S+) \((\S+)\)$")
             .map_err(|e| format!("Failed to compile regex: {}", e))?;
 
-        let args = vec!["list", "--exact", &name];
+        let args = vec!["--exact", &name];
         let output = self
-            .execute_gem_command(args)
+            .execute_gem_command("list".into(), args)
             .map_err(|e| format!("Failed to get version for gem '{}': {}", name, e))?;
 
         for line in output.lines() {
@@ -104,9 +101,8 @@ impl Gemset {
     }
 
     pub fn is_outdated_gem(&self, name: String) -> Result<bool> {
-        let args = vec!["outdated"];
         let output = self
-            .execute_gem_command(args)
+            .execute_gem_command("outdated".into(), vec![])
             .map_err(|e| format!("Failed to check if gem is outdated: {}", e))?;
 
         Ok(output
@@ -114,11 +110,12 @@ impl Gemset {
             .any(|line| line.split_whitespace().next().is_some_and(|n| n == name)))
     }
 
-    fn execute_gem_command(&self, args: Vec<&str>) -> Result<String> {
+    fn execute_gem_command(&self, command: String, args: Vec<&str>) -> Result<String> {
         Command::new("gem")
             .envs(self.gem_env())
-            .args(args)
+            .arg(command)
             .arg("--norc")
+            .args(args)
             .output()
             .map_err(|e| format!("Failed to execute gem command: {}", e))
             .and_then(|output| match output.status {
