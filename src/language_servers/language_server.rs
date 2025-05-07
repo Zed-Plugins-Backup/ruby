@@ -3,7 +3,10 @@ use zed_extension_api::{
     LanguageServerInstallationStatus, Result,
 };
 
-use crate::{bundler::Bundler, gemset::Gemset};
+use crate::{
+    bundler::{Bundler, RealCommandExecutor},
+    gemset::{Gemset, RealGemCommandExecutor},
+};
 
 #[derive(Clone, Debug)]
 pub struct LanguageServerBinary {
@@ -67,7 +70,7 @@ pub trait LanguageServer {
             return self.extension_gemset_language_server_binary(language_server_id);
         }
 
-        let bundler = Bundler::new(worktree.root_path());
+        let bundler = Bundler::new(worktree.root_path(), Box::new(RealCommandExecutor));
         match bundler.installed_gem_version(Self::GEM_NAME) {
             Ok(_version) => {
                 let bundle_path = worktree
@@ -109,7 +112,7 @@ pub trait LanguageServer {
             .to_string_lossy()
             .to_string();
 
-        let gemset = Gemset::new(gem_home.clone());
+        let gemset = Gemset::new(gem_home.clone(), Box::new(RealGemCommandExecutor));
 
         set_language_server_installation_status(
             language_server_id,
@@ -184,6 +187,10 @@ mod tests {
 
     #[test]
     fn test_default_executable_args() {
-        assert!(TestServer::get_executable_args() == vec!["--test-arg"]);
+        assert_eq!(
+            TestServer::get_executable_args(),
+            vec!["--test-arg"],
+            "Default executable args should match expected vector"
+        );
     }
 }
