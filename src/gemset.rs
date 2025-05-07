@@ -34,15 +34,18 @@ impl Gemset {
     ///
     /// This function returns the necessary environment variables for Ruby gems:
     /// - GEM_PATH: Path where gems are installed
-    /// - GEM_HOME: Directory where gems will be installed
     ///
     /// # Returns
     /// A vector of environment variable key-value pairs.
+    pub fn gem_bin_env(&self) -> Vec<(String, String)> {
+        vec![(
+            "GEM_PATH".to_string(),
+            format!("{}:$GEM_PATH", self.gem_home.clone()),
+        )]
+    }
+
     pub fn gem_env(&self) -> Vec<(String, String)> {
-        vec![
-            ("GEM_PATH".to_string(), self.gem_home.clone()),
-            ("GEM_HOME".to_string(), self.gem_home.clone()),
-        ]
+        vec![("GEM_HOME".to_string(), self.gem_home.clone())]
     }
 
     pub fn install_gem(&self, name: String) -> Result<()> {
